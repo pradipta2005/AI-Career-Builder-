@@ -19,8 +19,6 @@ st.set_page_config(
     initial_sidebar_state="expanded"  # Fixed default
 )
 
-
-
 # Now it's safe to use any st.* calls
 load_dotenv()
 
@@ -29,6 +27,8 @@ if 'sidebar_visible' not in st.session_state:
     st.session_state.sidebar_visible = True
 if 'selected_template' not in st.session_state:
     st.session_state.selected_template = "Modern Professional"
+if 'selected_portfolio_template' not in st.session_state:
+    st.session_state.selected_portfolio_template = "Modern Minimal"
 if 'student_profile' not in st.session_state:
     st.session_state.student_profile = {}
 if 'profile_completeness' not in st.session_state:
@@ -43,6 +43,7 @@ else:
     genai.configure(api_key=GEMINI_API_KEY)
 
 MODEL_NAME = "gemini-2.0-flash-exp"
+
 # Apply CSS to hide/show the sidebar
 st.markdown(
     f"""
@@ -409,6 +410,71 @@ ADVANCED_CSS = """
     @keyframes backgroundMove {
         0% { transform: translate(0, 0); }
         100% { transform: translate(50px, 50px); }
+    }
+
+    /* Advanced 3D Animations */
+    .card-3d {
+        transform-style: preserve-3d;
+        transition: transform 0.6s;
+    }
+    
+    .card-3d:hover {
+        transform: rotateY(10deg) rotateX(-10deg);
+    }
+    
+    /* Morphing Shapes */
+    .morph-shape {
+        border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
+        animation: morph 8s ease-in-out infinite;
+        background: linear-gradient(45deg, var(--primary), var(--secondary));
+    }
+    
+    @keyframes morph {
+        0% { border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%; }
+        50% { border-radius: 30% 60% 70% 40% / 50% 60% 30% 60%; }
+        100% { border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%; }
+    }
+    
+    /* Parallax Background */
+    .parallax-bg {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: -1;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        transform: translateZ(-1px) scale(2);
+    }
+    
+    /* Cursor Following Effect */
+    .cursor-follower {
+        position: fixed;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.1);
+        pointer-events: none;
+        z-index: 9999;
+        transition: transform 0.1s ease-out;
+    }
+    
+    /* Glowing Text Effect */
+    .glow-text {
+        text-shadow: 0 0 10px rgba(255, 255, 255, 0.5),
+                     0 0 20px rgba(255, 255, 255, 0.3),
+                     0 0 30px rgba(255, 255, 255, 0.2);
+    }
+    
+    /* Floating Animation */
+    .floating {
+        animation: float 6s ease-in-out infinite;
+    }
+    
+    @keyframes float {
+        0% { transform: translateY(0px); }
+        50% { transform: translateY(-20px); }
+        100% { transform: translateY(0px); }
     }
     
     /* Tabs */
@@ -962,6 +1028,25 @@ FONT_PRESETS = {
     "Tech (Fira Code)": "@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500&display=swap'); font-family: 'Fira Code', monospace;",
 }
 
+
+PORTFOLIO_TEMPLATES = {
+    "Modern Minimal": {
+        "description": "Clean design with subtle animations and plenty of whitespace",
+        "preview": "https://example.com/modern-minimal.png"  # You would add actual preview images
+    },
+    "Creative Portfolio": {
+        "description": "Bold colors, creative layouts, and eye-catching animations",
+        "preview": "https://example.com/creative.png"
+    },
+    "Tech Professional": {
+        "description": "Dark theme with code snippets and terminal-style elements",
+        "preview": "https://example.com/tech.png"
+    },
+    "Interactive Designer": {
+        "description": "3D elements, parallax scrolling, and interactive components",
+        "preview": "https://example.com/designer.png"
+    }
+}
 def generate_particles_script(primary_color):
     """Generate particles.js script"""
     return f"""
@@ -1014,67 +1099,43 @@ def generate_theme_toggle_script():
     }
 </script>
 """
-
-def generate_portfolio_html(config):
-    """Generate complete portfolio HTML with theme support"""
-    
-    font_import = ""
-    font_family = config['font_family']
-    if '@import' in font_family:
-        parts = font_family.split(';')
-        font_import = parts[0] + ';'
-        if len(parts) > 1:
-            font_family = f"font-family: {parts[1]};"
-        else:
-            font_family = "font-family: 'Inter', sans-serif;"
-    else:
-        font_family = "font-family: 'Inter', sans-serif;"
-
-    theme_toggle_html = ""
-    theme_toggle_script = ""
-    
-    if config['theme_mode'] == 'Toggle (User Choice)':
-        theme_toggle_html = """
-        <button id="themeToggle" class="theme-toggle" aria-label="Toggle theme">
-            🌙
-        </button>
-        """
-        theme_toggle_script = generate_theme_toggle_script()
-    
-    initial_theme = 'dark' if config['theme_mode'] in ['Dark', 'Toggle (User Choice)'] else 'light'
+def generate_modern_minimal_html(config, font_family, font_import, theme_toggle_html, theme_toggle_script, initial_theme):
+    """Generate Modern Minimal portfolio HTML"""
     
     about_section = ""
     if config['show_about']:
         about_section = f"""
-    <section id="about">
-        <h2>About Me</h2>
-        <div class="about-content">
-            <div class="about-text">
-                <p>{config['about']}</p>
-            </div>
-            <div class="about-stats" style="{'display: none;' if not config['show_stats'] else ''}">
-                <div class="stat-card">
-                    <div class="stat-number">{config['num_projects']}+</div>
-                    <div class="stat-label">Projects</div>
+    <section id="about" class="section fade-in">
+        <div class="container">
+            <h2 class="section-title">About Me</h2>
+            <div class="about-content">
+                <div class="about-text">
+                    <p>{config['about']}</p>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-number">{config['num_skills']}+</div>
-                    <div class="stat-label">Technologies</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number">{config['years_exp']}</div>
-                    <div class="stat-label">Years</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number">100%</div>
-                    <div class="stat-label">Passion</div>
+                <div class="about-stats" style="{'display: none;' if not config['show_stats'] else ''}">
+                    <div class="stat-card">
+                        <div class="stat-number">{config['num_projects']}+</div>
+                        <div class="stat-label">Projects</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">{config['num_skills']}+</div>
+                        <div class="stat-label">Technologies</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">{config['years_exp']}</div>
+                        <div class="stat-label">Years</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">100%</div>
+                        <div class="stat-label">Passion</div>
+                    </div>
                 </div>
             </div>
         </div>
     </section>
     """
 
-    # Main HTML (f-string braces corrected)
+    # Main HTML
     html = f"""
 <!DOCTYPE html>
 <html lang="en" data-theme="{initial_theme}">
@@ -1268,9 +1329,218 @@ def generate_portfolio_html(config):
             background: rgba(99, 102, 241, 0.1);
         }}
         
+        .container {{
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }}
+        
+        .section {{
+            padding: 5rem 0;
+        }}
+        
+        .section-title {{
+            font-size: 2.5rem;
+            text-align: center;
+            margin-bottom: 3rem;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }}
+        
+        .about-content {{
+            display: grid;
+            grid-template-columns: {config.get('about_layout', '1fr 1fr')};
+            gap: 3rem;
+            align-items: center;
+        }}
+        
+        .about-text {{
+            font-size: 1.1rem;
+            line-height: 1.7;
+        }}
+        
+        .about-stats {{
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+        }}
+        
+        .stat-card {{
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: {config['card_radius']}px;
+            padding: 1.5rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }}
+        
+        .stat-card:hover {{
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }}
+        
+        .stat-number {{
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }}
+        
+        .stat-label {{
+            color: var(--text-secondary);
+        }}
+        
+        .skills-grid {{
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }}
+        
+        .skill-card {{
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: {config['card_radius']}px;
+            padding: 2rem;
+            transition: all 0.3s ease;
+        }}
+        
+        .skill-card:hover {{
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }}
+        
+        .skill-card h3 {{
+            margin-bottom: 1rem;
+            color: var(--primary);
+        }}
+        
+        .skill-tags {{
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }}
+        
+        .skill-tag {{
+            background: rgba(99, 102, 241, 0.1);
+            color: var(--primary);
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }}
+        
+        .projects-grid {{
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+        }}
+        
+        .project-card {{
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: {config['card_radius']}px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }}
+        
+        .project-card:hover {{
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }}
+        
+        .project-image {{
+            height: 200px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+        }}
+        
+        .project-content {{
+            padding: 1.5rem;
+        }}
+        
+        .project-content h3 {{
+            margin-bottom: 1rem;
+            color: var(--primary);
+        }}
+        
+        .project-tech {{
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }}
+        
+        .tech-badge {{
+            background: rgba(99, 102, 241, 0.1);
+            color: var(--primary);
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }}
+        
+        .contact-content {{
+            text-align: center;
+            max-width: 600px;
+            margin: 0 auto;
+        }}
+        
+        .contact-content p {{
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+        }}
+        
+        .contact-info {{
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+        }}
+        
+        .social-links {{
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            font-size: 1.5rem;
+        }}
+        
+        .social-links a {{
+            color: var(--primary);
+            transition: all 0.3s ease;
+        }}
+        
+        .social-links a:hover {{
+            transform: translateY(-3px);
+        }}
+        
         @keyframes fadeInUp {{
             from {{ opacity: 0; transform: translateY(30px); }}
             to {{ opacity: 1; transform: translateY(0); }}
+        }}
+        
+        .fade-in {{
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }}
+        
+        .fade-in.visible {{
+            opacity: 1;
+            transform: translateY(0);
+        }}
+        
+        @media (max-width: 768px) {{
+            .about-content {{
+                grid-template-columns: 1fr;
+            }}
+            
+            .about-stats {{
+                grid-template-columns: repeat(2, 1fr);
+            }}
+            
+            nav .nav-links {{
+                display: none;
+            }}
         }}
     </style>
 </head>
@@ -1305,22 +1575,567 @@ def generate_portfolio_html(config):
 
     {about_section}
 
-    <section id="skills">
-        <h2>Skills & Expertise</h2>
-        <div class="skills-grid">{config['skills_html']}</div>
+    <section id="skills" class="section fade-in">
+        <div class="container">
+            <h2 class="section-title">Skills & Expertise</h2>
+            <div class="skills-grid">{config['skills_html']}</div>
+        </div>
     </section>
 
-    <section id="projects">
-        <h2>Featured Projects</h2>
-        <div class="projects-grid">{config['projects_html']}</div>
+    <section id="projects" class="section fade-in">
+        <div class="container">
+            <h2 class="section-title">Featured Projects</h2>
+            <div class="projects-grid">{config['projects_html']}</div>
+        </div>
     </section>
 
-    <section id="contact">
-        <h2>Let's Connect</h2>
-        <div class="contact-content">
-            <p>I'm always excited to collaborate on innovative projects!</p>
-            <div class="contact-info">{config['email']}</div>
-            <div class="social-links">{config['social_links_html']}</div>
+    <section id="contact" class="section fade-in">
+        <div class="container">
+            <h2 class="section-title">Let's Connect</h2>
+            <div class="contact-content">
+                <p>I'm always excited to collaborate on innovative projects!</p>
+                <div class="contact-info">{config['email']}</div>
+                <div class="social-links">{config['social_links_html']}</div>
+            </div>
+        </div>
+    </section>
+
+    {config['particles_script']}
+    {theme_toggle_script}
+
+    <script>
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {{
+            anchor.addEventListener('click', function (e) {{
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {{
+                    target.scrollIntoView({{ behavior: 'smooth' }});
+                }}
+            }});
+        }});
+        
+        // Fade in animation on scroll
+        const observerOptions = {{
+            root: null,
+            rootMargin: '0px',
+            threshold: 0.1
+        }};
+        
+        const observer = new IntersectionObserver((entries) => {{
+            entries.forEach(entry => {{
+                if (entry.isIntersecting) {{
+                    entry.target.classList.add('visible');
+                }}
+            }});
+        }}, observerOptions);
+        
+        document.querySelectorAll('.fade-in').forEach(el => {{
+            observer.observe(el);
+        }});
+    </script>
+</body>
+</html>
+"""
+    return html
+
+def generate_creative_portfolio_html(config, font_family, font_import, theme_toggle_html, theme_toggle_script, initial_theme):
+    """Generate Creative Portfolio HTML with morphing shapes and animations"""
+    
+    # Similar structure but with creative elements
+    # This is a simplified version - you would expand it with more creative features
+    
+    about_section = ""
+    if config['show_about']:
+        about_section = f"""
+    <section id="about" class="section">
+        <div class="morph-shape"></div>
+        <div class="container">
+            <h2 class="section-title glow-text">About Me</h2>
+            <div class="about-content">
+                <div class="about-text">
+                    <p>{config['about']}</p>
+                </div>
+                <div class="about-visual">
+                    <div class="floating-element"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+    """
+
+    html = f"""
+<!DOCTYPE html>
+<html lang="en" data-theme="{initial_theme}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{config['name']} - Creative Portfolio</title>
+    <style>
+        {font_import}
+        
+        * {{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }}
+        
+        :root {{
+            --primary: {config['primary_color']};
+            --secondary: {config['secondary_color']};
+            --accent: {config['accent_color']};
+        }}
+        
+        [data-theme="dark"] {{
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --text-primary: #f8fafc;
+            --text-secondary: rgba(248, 250, 252, 0.8);
+            --card-bg: rgba(255, 255, 255, 0.05);
+            --border-color: rgba(255, 255, 255, 0.1);
+        }}
+        
+        [data-theme="light"] {{
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8fafc;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --card-bg: #ffffff;
+            --border-color: #e2e8f0;
+        }}
+        
+        body {{
+            {font_family}
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+            transition: background 0.3s ease, color 0.3s ease;
+        }}
+        
+        .theme-toggle {{
+            position: fixed;
+            top: 1.5rem;
+            right: 1.5rem;
+            z-index: 1001;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border: none;
+            cursor: pointer;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+            transition: all 0.3s ease;
+        }}
+        
+        .theme-toggle:hover {{
+            transform: scale(1.1) rotate(20deg);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.6);
+        }}
+        
+        #particles-js {{
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            {'display: none;' if not config['show_particles'] else ''}
+        }}
+        
+        [data-theme="light"] #particles-js {{
+            opacity: 0.3;
+        }}
+        
+        nav {{
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            padding: 1.5rem 0;
+            z-index: 1000;
+            border-bottom: 1px solid var(--border-color);
+            {'display: none;' if not config['show_nav'] else ''}
+        }}
+        
+        nav .container {{
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }}
+        
+        nav .logo {{
+            font-size: {config['logo_size']}rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }}
+        
+        nav .nav-links {{
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }}
+        
+        nav a {{
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: 0.3s;
+            font-weight: 500;
+        }}
+        
+        nav a:hover {{
+            color: var(--text-primary);
+        }}
+        
+        .hero {{
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: {config['hero_align']};
+            padding: 2rem;
+            position: relative;
+            overflow: hidden;
+        }}
+        
+        .hero::before {{
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 20% 80%, var(--primary) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 20%, var(--secondary) 0%, transparent 50%);
+            opacity: 0.1;
+            z-index: -1;
+        }}
+        
+        .hero-content h1 {{
+            font-size: {config['hero_title_size']}rem;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 1rem;
+            animation: fadeInUp 0.8s ease-out;
+        }}
+        
+        .hero-content .tagline {{
+            font-size: 1.5rem;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+            animation: fadeInUp 0.8s ease-out 0.2s backwards;
+        }}
+        
+        .hero-content .description {{
+            font-size: 1.15rem;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+            animation: fadeInUp 0.8s ease-out 0.4s backwards;
+        }}
+        
+        .btn {{
+            padding: 1rem 2rem;
+            border-radius: {config['button_radius']}px;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-block;
+            margin: 0.5rem;
+            transition: all 0.3s ease;
+        }}
+        
+        .btn-primary {{
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+        }}
+        
+        .btn-primary:hover {{
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5);
+        }}
+        
+        .btn-secondary {{
+            border: 2px solid var(--primary);
+            color: var(--primary);
+        }}
+        
+        .btn-secondary:hover {{
+            background: rgba(99, 102, 241, 0.1);
+        }}
+        
+        .container {{
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }}
+        
+        .section {{
+            padding: 5rem 0;
+            position: relative;
+        }}
+        
+        .section-title {{
+            font-size: 2.5rem;
+            text-align: center;
+            margin-bottom: 3rem;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }}
+        
+        .morph-shape {{
+            position: absolute;
+            top: 10%;
+            right: 10%;
+            width: 300px;
+            height: 300px;
+            border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
+            background: linear-gradient(45deg, var(--primary), var(--secondary));
+            opacity: 0.1;
+            animation: morph 8s ease-in-out infinite;
+            z-index: -1;
+        }}
+        
+        .floating-element {{
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 50%;
+            position: relative;
+            animation: float 6s ease-in-out infinite;
+        }}
+        
+        .about-content {{
+            display: grid;
+            grid-template-columns: {config.get('about_layout', '1fr 1fr')};
+            gap: 3rem;
+            align-items: center;
+        }}
+        
+        .about-text {{
+            font-size: 1.1rem;
+            line-height: 1.7;
+        }}
+        
+        .skills-grid {{
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }}
+        
+        .skill-card {{
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: {config['card_radius']}px;
+            padding: 2rem;
+            transition: all 0.3s ease;
+            transform-style: preserve-3d;
+        }}
+        
+        .skill-card:hover {{
+            transform: translateY(-5px) rotateY(5deg);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }}
+        
+        .skill-card h3 {{
+            margin-bottom: 1rem;
+            color: var(--primary);
+        }}
+        
+        .skill-tags {{
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }}
+        
+        .skill-tag {{
+            background: rgba(99, 102, 241, 0.1);
+            color: var(--primary);
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }}
+        
+        .projects-grid {{
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+        }}
+        
+        .project-card {{
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: {config['card_radius']}px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            transform-style: preserve-3d;
+        }}
+        
+        .project-card:hover {{
+            transform: translateY(-5px) rotateY(5deg);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }}
+        
+        .project-image {{
+            height: 200px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+        }}
+        
+        .project-content {{
+            padding: 1.5rem;
+        }}
+        
+        .project-content h3 {{
+            margin-bottom: 1rem;
+            color: var(--primary);
+        }}
+        
+        .project-tech {{
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }}
+        
+        .tech-badge {{
+            background: rgba(99, 102, 241, 0.1);
+            color: var(--primary);
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }}
+        
+        .contact-content {{
+            text-align: center;
+            max-width: 600px;
+            margin: 0 auto;
+        }}
+        
+        .contact-content p {{
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+        }}
+        
+        .contact-info {{
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+        }}
+        
+        .social-links {{
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            font-size: 1.5rem;
+        }}
+        
+        .social-links a {{
+            color: var(--primary);
+            transition: all 0.3s ease;
+        }}
+        
+        .social-links a:hover {{
+            transform: translateY(-3px);
+        }}
+        
+        .glow-text {{
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5),
+                         0 0 20px rgba(255, 255, 255, 0.3),
+                         0 0 30px rgba(255, 255, 255, 0.2);
+        }}
+        
+        @keyframes fadeInUp {{
+            from {{ opacity: 0; transform: translateY(30px); }}
+            to {{ opacity: 1; transform: translateY(0); }}
+        }}
+        
+        @keyframes morph {{
+            0% {{ border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%; }}
+            50% {{ border-radius: 30% 60% 70% 40% / 50% 60% 30% 60%; }}
+            100% {{ border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%; }}
+        }}
+        
+        @keyframes float {{
+            0% {{ transform: translateY(0px); }}
+            50% {{ transform: translateY(-20px); }}
+            100% {{ transform: translateY(0px); }}
+        }}
+        
+        @media (max-width: 768px) {{
+            .about-content {{
+                grid-template-columns: 1fr;
+            }}
+            
+            nav .nav-links {{
+                display: none;
+            }}
+        }}
+    </style>
+</head>
+<body>
+    <div id="particles-js"></div>
+    {theme_toggle_html}
+    <nav>
+        <div class="container">
+            <div class="logo">{config['name']}</div>
+            <ul class="nav-links">
+                <li><a href="#home">Home</a></li>
+                {'<li><a href="#about">About</a></li>' if config['show_about'] else ''}
+                <li><a href="#skills">Skills</a></li>
+                <li><a href="#projects">Projects</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <section id="home" class="hero">
+        <div class="hero-content">
+            <div style="font-size: 1.3rem; color: var(--primary); margin-bottom: 1rem;">{config['greeting_text']}</div>
+            <h1>{config['name']}</h1>
+            <p class="tagline">{config['tagline']}</p>
+            <p class="description">{config['about']}</p>
+            <div>
+                <a href="#projects" class="btn btn-primary">View Work →</a>
+                <a href="#contact" class="btn btn-secondary">Contact</a>
+            </div>
+        </div>
+    </section>
+
+    {about_section}
+
+    <section id="skills" class="section">
+        <div class="container">
+            <h2 class="section-title">Skills & Expertise</h2>
+            <div class="skills-grid">{config['skills_html']}</div>
+        </div>
+    </section>
+
+    <section id="projects" class="section">
+        <div class="container">
+            <h2 class="section-title">Featured Projects</h2>
+            <div class="projects-grid">{config['projects_html']}</div>
+        </div>
+    </section>
+
+    <section id="contact" class="section">
+        <div class="container">
+            <h2 class="section-title">Let's Connect</h2>
+            <div class="contact-content">
+                <p>I'm always excited to collaborate on innovative projects!</p>
+                <div class="contact-info">{config['email']}</div>
+                <div class="social-links">{config['social_links_html']}</div>
+            </div>
         </div>
     </section>
 
@@ -1343,12 +2158,1238 @@ def generate_portfolio_html(config):
 """
     return html
 
+def generate_tech_professional_html(config, font_family, font_import, theme_toggle_html, theme_toggle_script, initial_theme):
+    """Generate Tech Professional portfolio HTML with terminal-style elements"""
+    
+    # Similar structure but with tech-focused elements
+    # This is a simplified version - you would expand it with more tech features
+    
+    about_section = ""
+    if config['show_about']:
+        about_section = f"""
+    <section id="about" class="section">
+        <div class="container">
+            <h2 class="section-title">&gt; About Me</h2>
+            <div class="terminal">
+                <div class="terminal-header">
+                    <div class="terminal-buttons">
+                        <div class="terminal-button close"></div>
+                        <div class="terminal-button minimize"></div>
+                        <div class="terminal-button maximize"></div>
+                    </div>
+                    <div class="terminal-title">about.sh</div>
+                </div>
+                <div class="terminal-body">
+                    <div class="terminal-line">
+                        <span class="terminal-prompt">$</span>
+                        <span class="terminal-command">cat about.txt</span>
+                    </div>
+                    <div class="terminal-output">
+                        <p>{config['about']}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    """
+
+    html = f"""
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{config['name']} - Tech Portfolio</title>
+    <style>
+        {font_import}
+        
+        * {{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }}
+        
+        :root {{
+            --primary: {config['primary_color']};
+            --secondary: {config['secondary_color']};
+            --accent: {config['accent_color']};
+            --terminal-bg: #1e1e1e;
+            --terminal-text: #f8f8f2;
+            --terminal-prompt: #50fa7b;
+            --terminal-cursor: #f8f8f0;
+        }}
+        
+        body {{
+            {font_family}
+            background: #0d1117;
+            color: #c9d1d9;
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+        }}
+        
+        .theme-toggle {{
+            position: fixed;
+            top: 1.5rem;
+            right: 1.5rem;
+            z-index: 1001;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border: none;
+            cursor: pointer;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+            transition: all 0.3s ease;
+        }}
+        
+        .theme-toggle:hover {{
+            transform: scale(1.1) rotate(20deg);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.6);
+        }}
+        
+        #particles-js {{
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            {'display: none;' if not config['show_particles'] else ''}
+        }}
+        
+        nav {{
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: rgba(13, 17, 23, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 1.5rem 0;
+            z-index: 1000;
+            border-bottom: 1px solid #30363d;
+            {'display: none;' if not config['show_nav'] else ''}
+        }}
+        
+        nav .container {{
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }}
+        
+        nav .logo {{
+            font-size: {config['logo_size']}rem;
+            font-weight: 800;
+            color: var(--primary);
+            font-family: 'Fira Code', monospace;
+        }}
+        
+        nav .nav-links {{
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }}
+        
+        nav a {{
+            color: #8b949e;
+            text-decoration: none;
+            transition: 0.3s;
+            font-weight: 500;
+            font-family: 'Fira Code', monospace;
+        }}
+        
+        nav a:hover {{
+            color: #c9d1d9;
+        }}
+        
+        .hero {{
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: {config['hero_align']};
+            padding: 2rem;
+            position: relative;
+        }}
+        
+        .hero::before {{
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                linear-gradient(to right, rgba(13, 17, 23, 0.8) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(13, 17, 23, 0.8) 1px, transparent 1px);
+            background-size: 40px 40px;
+            z-index: -1;
+        }}
+        
+        .hero-content {{
+            max-width: 800px;
+        }}
+        
+        .hero-content h1 {{
+            font-size: {config['hero_title_size']}rem;
+            color: var(--primary);
+            margin-bottom: 1rem;
+            font-family: 'Fira Code', monospace;
+            animation: fadeInUp 0.8s ease-out;
+        }}
+        
+        .hero-content .tagline {{
+            font-size: 1.5rem;
+            color: #8b949e;
+            margin-bottom: 2rem;
+            animation: fadeInUp 0.8s ease-out 0.2s backwards;
+        }}
+        
+        .hero-content .description {{
+            font-size: 1.15rem;
+            color: #8b949e;
+            margin-bottom: 2rem;
+            animation: fadeInUp 0.8s ease-out 0.4s backwards;
+        }}
+        
+        .btn {{
+            padding: 1rem 2rem;
+            border-radius: {config['button_radius']}px;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-block;
+            margin: 0.5rem;
+            transition: all 0.3s ease;
+            font-family: 'Fira Code', monospace;
+        }}
+        
+        .btn-primary {{
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+        }}
+        
+        .btn-primary:hover {{
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5);
+        }}
+        
+        .btn-secondary {{
+            border: 2px solid var(--primary);
+            color: var(--primary);
+        }}
+        
+        .btn-secondary:hover {{
+            background: rgba(99, 102, 241, 0.1);
+        }}
+        
+        .container {{
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }}
+        
+        .section {{
+            padding: 5rem 0;
+        }}
+        
+        .section-title {{
+            font-size: 2.5rem;
+            text-align: center;
+            margin-bottom: 3rem;
+            color: var(--primary);
+            font-family: 'Fira Code', monospace;
+        }}
+        
+        .terminal {{
+            background: var(--terminal-bg);
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }}
+        
+        .terminal-header {{
+            background: #21262d;
+            padding: 0.5rem 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }}
+        
+        .terminal-buttons {{
+            display: flex;
+            gap: 0.5rem;
+        }}
+        
+        .terminal-button {{
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }}
+        
+        .terminal-button.close {{
+            background: #ff5f56;
+        }}
+        
+        .terminal-button.minimize {{
+            background: #ffbd2e;
+        }}
+        
+        .terminal-button.maximize {{
+            background: #27c93f;
+        }}
+        
+        .terminal-title {{
+            color: var(--terminal-text);
+            font-size: 0.9rem;
+            font-family: 'Fira Code', monospace;
+        }}
+        
+        .terminal-body {{
+            padding: 1rem;
+            font-family: 'Fira Code', monospace;
+        }}
+        
+        .terminal-line {{
+            display: flex;
+            margin-bottom: 0.5rem;
+        }}
+        
+        .terminal-prompt {{
+            color: var(--terminal-prompt);
+            margin-right: 0.5rem;
+        }}
+        
+        .terminal-command {{
+            color: var(--terminal-text);
+        }}
+        
+        .terminal-output {{
+            color: var(--terminal-text);
+            margin-top: 0.5rem;
+            white-space: pre-wrap;
+        }}
+        
+        .terminal-cursor {{
+            display: inline-block;
+            width: 10px;
+            height: 1.2em;
+            background: var(--terminal-cursor);
+            animation: blink 1s infinite;
+        }}
+        
+        .skills-grid {{
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }}
+        
+        .skill-card {{
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: {config['card_radius']}px;
+            padding: 2rem;
+            transition: all 0.3s ease;
+        }}
+        
+        .skill-card:hover {{
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+            border-color: var(--primary);
+        }}
+        
+        .skill-card h3 {{
+            margin-bottom: 1rem;
+            color: var(--primary);
+            font-family: 'Fira Code', monospace;
+        }}
+        
+        .skill-tags {{
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }}
+        
+        .skill-tag {{
+            background: rgba(99, 102, 241, 0.1);
+            color: var(--primary);
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-family: 'Fira Code', monospace;
+        }}
+        
+        .projects-grid {{
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+        }}
+        
+        .project-card {{
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: {config['card_radius']}px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }}
+        
+        .project-card:hover {{
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+            border-color: var(--primary);
+        }}
+        
+        .project-image {{
+            height: 200px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+        }}
+        
+        .project-content {{
+            padding: 1.5rem;
+        }}
+        
+        .project-content h3 {{
+            margin-bottom: 1rem;
+            color: var(--primary);
+            font-family: 'Fira Code', monospace;
+        }}
+        
+        .project-tech {{
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }}
+        
+        .tech-badge {{
+            background: rgba(99, 102, 241, 0.1);
+            color: var(--primary);
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-family: 'Fira Code', monospace;
+        }}
+        
+        .contact-content {{
+            text-align: center;
+            max-width: 600px;
+            margin: 0 auto;
+        }}
+        
+        .contact-content p {{
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+        }}
+        
+        .contact-info {{
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            font-family: 'Fira Code', monospace;
+        }}
+        
+        .social-links {{
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            font-size: 1.5rem;
+        }}
+        
+        .social-links a {{
+            color: var(--primary);
+            transition: all 0.3s ease;
+        }}
+        
+        .social-links a:hover {{
+            transform: translateY(-3px);
+        }}
+        
+        @keyframes fadeInUp {{
+            from {{ opacity: 0; transform: translateY(30px); }}
+            to {{ opacity: 1; transform: translateY(0); }}
+        }}
+        
+        @keyframes blink {{
+            0%, 50% {{ opacity: 1; }}
+            51%, 100% {{ opacity: 0; }}
+        }}
+        
+        @media (max-width: 768px) {{
+            nav .nav-links {{
+                display: none;
+            }}
+        }}
+    </style>
+</head>
+<body>
+    <div id="particles-js"></div>
+    {theme_toggle_html}
+    <nav>
+        <div class="container">
+            <div class="logo">{config['name']}</div>
+            <ul class="nav-links">
+                <li><a href="#home">Home</a></li>
+                {'<li><a href="#about">About</a></li>' if config['show_about'] else ''}
+                <li><a href="#skills">Skills</a></li>
+                <li><a href="#projects">Projects</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <section id="home" class="hero">
+        <div class="hero-content">
+            <div style="font-size: 1.3rem; color: var(--primary); margin-bottom: 1rem; font-family: 'Fira Code', monospace;">$ ./greeting.sh</div>
+            <h1>{config['name']}</h1>
+            <p class="tagline">{config['tagline']}</p>
+            <p class="description">{config['about']}</p>
+            <div>
+                <a href="#projects" class="btn btn-primary">View Work →</a>
+                <a href="#contact" class="btn btn-secondary">Contact</a>
+            </div>
+        </div>
+    </section>
+
+    {about_section}
+
+    <section id="skills" class="section">
+        <div class="container">
+            <h2 class="section-title">&gt; Skills & Expertise</h2>
+            <div class="skills-grid">{config['skills_html']}</div>
+        </div>
+    </section>
+
+    <section id="projects" class="section">
+        <div class="container">
+            <h2 class="section-title">&gt; Featured Projects</h2>
+            <div class="projects-grid">{config['projects_html']}</div>
+        </div>
+    </section>
+
+    <section id="contact" class="section">
+        <div class="container">
+            <h2 class="section-title">&gt; Let's Connect</h2>
+            <div class="contact-content">
+                <p>I'm always excited to collaborate on innovative projects!</p>
+                <div class="contact-info">{config['email']}</div>
+                <div class="social-links">{config['social_links_html']}</div>
+            </div>
+        </div>
+    </section>
+
+    {config['particles_script']}
+    {theme_toggle_script}
+
+    <script>
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {{
+            anchor.addEventListener('click', function (e) {{
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {{
+                    target.scrollIntoView({{ behavior: 'smooth' }});
+                }}
+            }});
+        }});
+    </script>
+</body>
+</html>
+"""
+    return html
+
+def generate_interactive_designer_html(config, font_family, font_import, theme_toggle_html, theme_toggle_script, initial_theme):
+    """Generate Interactive Designer portfolio HTML with 3D elements and parallax"""
+    
+    # Similar structure but with interactive designer elements
+    # This is a simplified version - you would expand it with more interactive features
+    
+    about_section = ""
+    if config['show_about']:
+        about_section = f"""
+    <section id="about" class="section">
+        <div class="container">
+            <h2 class="section-title">About Me</h2>
+            <div class="about-content">
+                <div class="about-text">
+                    <p>{config['about']}</p>
+                </div>
+                <div class="about-visual">
+                    <div class="interactive-element"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+    """
+
+    html = f"""
+<!DOCTYPE html>
+<html lang="en" data-theme="{initial_theme}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{config['name']} - Interactive Portfolio</title>
+    <style>
+        {font_import}
+        
+        * {{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }}
+        
+        :root {{
+            --primary: {config['primary_color']};
+            --secondary: {config['secondary_color']};
+            --accent: {config['accent_color']};
+        }}
+        
+        [data-theme="dark"] {{
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --text-primary: #f8fafc;
+            --text-secondary: rgba(248, 250, 252, 0.8);
+            --card-bg: rgba(255, 255, 255, 0.05);
+            --border-color: rgba(255, 255, 255, 0.1);
+        }}
+        
+        [data-theme="light"] {{
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8fafc;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --card-bg: #ffffff;
+            --border-color: #e2e8f0;
+        }}
+        
+        body {{
+            {font_family}
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+            transition: background 0.3s ease, color 0.3s ease;
+            perspective: 1000px;
+        }}
+        
+        .theme-toggle {{
+            position: fixed;
+            top: 1.5rem;
+            right: 1.5rem;
+            z-index: 1001;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border: none;
+            cursor: pointer;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+            transition: all 0.3s ease;
+        }}
+        
+        .theme-toggle:hover {{
+            transform: scale(1.1) rotate(20deg);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.6);
+        }}
+        
+        #particles-js {{
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            {'display: none;' if not config['show_particles'] else ''}
+        }}
+        
+        [data-theme="light"] #particles-js {{
+            opacity: 0.3;
+        }}
+        
+        nav {{
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            padding: 1.5rem 0;
+            z-index: 1000;
+            border-bottom: 1px solid var(--border-color);
+            {'display: none;' if not config['show_nav'] else ''}
+        }}
+        
+        nav .container {{
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }}
+        
+        nav .logo {{
+            font-size: {config['logo_size']}rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }}
+        
+        nav .nav-links {{
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }}
+        
+        nav a {{
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: 0.3s;
+            font-weight: 500;
+        }}
+        
+        nav a:hover {{
+            color: var(--text-primary);
+        }}
+        
+        .hero {{
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: {config['hero_align']};
+            padding: 2rem;
+            position: relative;
+            overflow: hidden;
+        }}
+        
+        .hero::before {{
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 80%, var(--primary) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, var(--secondary) 0%, transparent 50%);
+            opacity: 0.1;
+            z-index: -1;
+        }}
+        
+        .hero-content {{
+            position: relative;
+            z-index: 1;
+        }}
+        
+        .hero-content h1 {{
+            font-size: {config['hero_title_size']}rem;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 1rem;
+            animation: fadeInUp 0.8s ease-out;
+        }}
+        
+        .hero-content .tagline {{
+            font-size: 1.5rem;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+            animation: fadeInUp 0.8s ease-out 0.2s backwards;
+        }}
+        
+        .hero-content .description {{
+            font-size: 1.15rem;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+            animation: fadeInUp 0.8s ease-out 0.4s backwards;
+        }}
+        
+        .btn {{
+            padding: 1rem 2rem;
+            border-radius: {config['button_radius']}px;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-block;
+            margin: 0.5rem;
+            transition: all 0.3s ease;
+        }}
+        
+        .btn-primary {{
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+        }}
+        
+        .btn-primary:hover {{
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5);
+        }}
+        
+        .btn-secondary {{
+            border: 2px solid var(--primary);
+            color: var(--primary);
+        }}
+        
+        .btn-secondary:hover {{
+            background: rgba(99, 102, 241, 0.1);
+        }}
+        
+        .container {{
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }}
+        
+        .section {{
+            padding: 5rem 0;
+            position: relative;
+        }}
+        
+        .section-title {{
+            font-size: 2.5rem;
+            text-align: center;
+            margin-bottom: 3rem;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }}
+        
+        .about-content {{
+            display: grid;
+            grid-template-columns: {config.get('about_layout', '1fr 1fr')};
+            gap: 3rem;
+            align-items: center;
+        }}
+        
+        .about-text {{
+            font-size: 1.1rem;
+            line-height: 1.7;
+        }}
+        
+        .interactive-element {{
+            width: 300px;
+            height: 300px;
+            position: relative;
+            transform-style: preserve-3d;
+            animation: rotate3d 20s infinite linear;
+        }}
+        
+        .interactive-element-face {{
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            opacity: 0.7;
+            border: 2px solid var(--primary);
+        }}
+        
+        .interactive-element-face.front {{
+            transform: translateZ(150px);
+        }}
+        
+        .interactive-element-face.back {{
+            transform: rotateY(180deg) translateZ(150px);
+        }}
+        
+        .interactive-element-face.right {{
+            transform: rotateY(90deg) translateZ(150px);
+        }}
+        
+        .interactive-element-face.left {{
+            transform: rotateY(-90deg) translateZ(150px);
+        }}
+        
+        .interactive-element-face.top {{
+            transform: rotateX(90deg) translateZ(150px);
+        }}
+        
+        .interactive-element-face.bottom {{
+            transform: rotateX(-90deg) translateZ(150px);
+        }}
+        
+        .skills-grid {{
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }}
+        
+        .skill-card {{
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: {config['card_radius']}px;
+            padding: 2rem;
+            transition: all 0.3s ease;
+            transform-style: preserve-3d;
+        }}
+        
+        .skill-card:hover {{
+            transform: translateY(-5px) rotateY(5deg);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }}
+        
+        .skill-card h3 {{
+            margin-bottom: 1rem;
+            color: var(--primary);
+        }}
+        
+        .skill-tags {{
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }}
+        
+        .skill-tag {{
+            background: rgba(99, 102, 241, 0.1);
+            color: var(--primary);
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }}
+        
+        .projects-grid {{
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+        }}
+        
+        .project-card {{
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: {config['card_radius']}px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            transform-style: preserve-3d;
+        }}
+        
+        .project-card:hover {{
+            transform: translateY(-5px) rotateY(5deg);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }}
+        
+        .project-image {{
+            height: 200px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+        }}
+        
+        .project-content {{
+            padding: 1.5rem;
+        }}
+        
+        .project-content h3 {{
+            margin-bottom: 1rem;
+            color: var(--primary);
+        }}
+        
+        .project-tech {{
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }}
+        
+        .tech-badge {{
+            background: rgba(99, 102, 241, 0.1);
+            color: var(--primary);
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }}
+        
+        .contact-content {{
+            text-align: center;
+            max-width: 600px;
+            margin: 0 auto;
+        }}
+        
+        .contact-content p {{
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+        }}
+        
+        .contact-info {{
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+        }}
+        
+        .social-links {{
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            font-size: 1.5rem;
+        }}
+        
+        .social-links a {{
+            color: var(--primary);
+            transition: all 0.3s ease;
+        }}
+        
+        .social-links a:hover {{
+            transform: translateY(-3px);
+        }}
+        
+        @keyframes fadeInUp {{
+            from {{ opacity: 0; transform: translateY(30px); }}
+            to {{ opacity: 1; transform: translateY(0); }}
+        }}
+        
+        @keyframes rotate3d {{
+            from {{ transform: rotateX(0deg) rotateY(0deg); }}
+            to {{ transform: rotateX(360deg) rotateY(360deg); }}
+        }}
+        
+        @media (max-width: 768px) {{
+            .about-content {{
+                grid-template-columns: 1fr;
+            }}
+            
+            .interactive-element {{
+                width: 200px;
+                height: 200px;
+            }}
+            
+            .interactive-element-face {{
+                width: 200px;
+                height: 200px;
+            }}
+            
+            .interactive-element-face.front,
+            .interactive-element-face.back {{
+                transform: translateZ(100px);
+            }}
+            
+            .interactive-element-face.right,
+            .interactive-element-face.left {{
+                transform: rotateY(90deg) translateZ(100px);
+            }}
+            
+            .interactive-element-face.top,
+            .interactive-element-face.bottom {{
+                transform: rotateX(90deg) translateZ(100px);
+            }}
+            
+            nav .nav-links {{
+                display: none;
+            }}
+        }}
+    </style>
+</head>
+<body>
+    <div id="particles-js"></div>
+    {theme_toggle_html}
+    <nav>
+        <div class="container">
+            <div class="logo">{config['name']}</div>
+            <ul class="nav-links">
+                <li><a href="#home">Home</a></li>
+                {'<li><a href="#about">About</a></li>' if config['show_about'] else ''}
+                <li><a href="#skills">Skills</a></li>
+                <li><a href="#projects">Projects</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <section id="home" class="hero">
+        <div class="hero-content">
+            <div style="font-size: 1.3rem; color: var(--primary); margin-bottom: 1rem;">{config['greeting_text']}</div>
+            <h1>{config['name']}</h1>
+            <p class="tagline">{config['tagline']}</p>
+            <p class="description">{config['about']}</p>
+            <div>
+                <a href="#projects" class="btn btn-primary">View Work →</a>
+                <a href="#contact" class="btn btn-secondary">Contact</a>
+            </div>
+        </div>
+    </section>
+
+    {about_section}
+
+    <section id="skills" class="section">
+        <div class="container">
+            <h2 class="section-title">Skills & Expertise</h2>
+            <div class="skills-grid">{config['skills_html']}</div>
+        </div>
+    </section>
+
+    <section id="projects" class="section">
+        <div class="container">
+            <h2 class="section-title">Featured Projects</h2>
+            <div class="projects-grid">{config['projects_html']}</div>
+        </div>
+    </section>
+
+    <section id="contact" class="section">
+        <div class="container">
+            <h2 class="section-title">Let's Connect</h2>
+            <div class="contact-content">
+                <p>I'm always excited to collaborate on innovative projects!</p>
+                <div class="contact-info">{config['email']}</div>
+                <div class="social-links">{config['social_links_html']}</div>
+            </div>
+        </div>
+    </section>
+
+    {config['particles_script']}
+    {theme_toggle_script}
+
+    <script>
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {{
+            anchor.addEventListener('click', function (e) {{
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {{
+                    target.scrollIntoView({{ behavior: 'smooth' }});
+                }}
+            }});
+        }});
+    </script>
+</body>
+</html>
+"""
+    return html
+
+def generate_portfolio_html(config):
+    """Generate complete portfolio HTML with theme support"""
+    
+    # Get selected template
+    template = config.get('template', 'Modern Minimal')
+    
+    font_import = ""
+    font_family = config['font_family']
+    if '@import' in font_family:
+        parts = font_family.split(';')
+        font_import = parts[0] + ';'
+        if len(parts) > 1:
+            font_family = f"font-family: {parts[1]};"
+        else:
+            font_family = "font-family: 'Inter', sans-serif;"
+    else:
+        font_family = "font-family: 'Inter', sans-serif;"
+
+    theme_toggle_html = ""
+    theme_toggle_script = ""
+    
+    if config['theme_mode'] == 'Toggle (User Choice)':
+        theme_toggle_html = """
+        <button id="themeToggle" class="theme-toggle" aria-label="Toggle theme">
+            🌙
+        </button>
+        """
+        theme_toggle_script = generate_theme_toggle_script()
+    
+    initial_theme = 'dark' if config['theme_mode'] in ['Dark', 'Toggle (User Choice)'] else 'light'
+    
+    # Generate different HTML based on template
+    if template == "Modern Minimal":
+        html_content = generate_modern_minimal_html(config, font_family, font_import, theme_toggle_html, theme_toggle_script, initial_theme)
+    elif template == "Creative Portfolio":
+        html_content = generate_creative_portfolio_html(config, font_family, font_import, theme_toggle_html, theme_toggle_script, initial_theme)
+    elif template == "Tech Professional":
+        html_content = generate_tech_professional_html(config, font_family, font_import, theme_toggle_html, theme_toggle_script, initial_theme)
+    elif template == "Interactive Designer":
+        html_content = generate_interactive_designer_html(config, font_family, font_import, theme_toggle_html, theme_toggle_script, initial_theme)
+    else:
+        # Default to Modern Minimal
+        html_content = generate_modern_minimal_html(config, font_family, font_import, theme_toggle_html, theme_toggle_script, initial_theme)
+    
+    return html_content
 
 # ------------------------- Helper Functions -----------------------------
 
 def download_link_bytes(content: bytes, filename: str, mime: str = "application/octet-stream") -> str:
     b64 = base64.b64encode(content).decode()
     return f'<a href="data:{mime};base64,{b64}" download="{filename}" class="download-btn">⬇️ Download {filename}</a>'
+
+
+def generate_skill_chart(skills):
+    """Generate an animated skill chart with smooth transitions."""
+    return f"""
+    <style>
+        .skill-chart-container {{
+            width: 100%;
+            max-width: 600px;
+            margin: 20px auto;
+        }}
+        .skill-item {{
+            margin-bottom: 15px;
+        }}
+        .skill-name {{
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #222;
+        }}
+        .skill-bar {{
+            width: 100%;
+            height: 10px;
+            background: #e5e5e5;
+            border-radius: 20px;
+            overflow: hidden;
+        }}
+        .skill-progress {{
+            height: 10px;
+            width: 0%;
+            background: linear-gradient(90deg, #00b4d8, #0077b6);
+            border-radius: 20px;
+            transition: width 1.5s ease-in-out;
+        }}
+    </style>
+
+    <div class="skill-chart-container">
+        {"".join([
+            f'''
+            <div class="skill-item">
+                <div class="skill-name">{skill.strip().title()}</div>
+                <div class="skill-bar">
+                    <div class="skill-progress" style="width: 0%;" data-width="{random.randint(70, 100)}%"></div>
+                </div>
+            </div>
+            ''' for skill in skills.split(',')[:5]
+        ])}
+    </div>
+
+    <script>
+        const observer = new IntersectionObserver((entries) => {{
+            entries.forEach(entry => {{
+                if (entry.isIntersecting) {{
+                    const width = entry.target.getAttribute('data-width');
+                    entry.target.style.width = width;
+                }}
+            }});
+        }});
+
+        document.querySelectorAll('.skill-progress').forEach(el => {{
+            observer.observe(el);
+        }});
+    </script>
+    """
+
+def generate_3d_project_cards(projects):
+    """Generate 3D project cards with hover effects"""
+    return "".join([f"""
+    <div class="project-card-3d card-3d">
+        <div class="card-face card-front">
+            <h3>{project['name']}</h3>
+            <p>{project['description'][:100]}...</p>
+        </div>
+        <div class="card-face card-back">
+            <h3>Technologies</h3>
+            <p>{project['tech']}</p>
+            <a href="{project['link']}" class="btn">View Project</a>
+        </div>
+    </div>
+    """ for project in projects[:6]])
 
 # ------------------------- Main App -----------------------------
 
@@ -2301,20 +4342,47 @@ def main():
             st.markdown("**Animation**")
             hover_effect = st.slider("Hover Lift (px)", -20, -5, -10, 1)
             button_radius = st.slider("Button Radius (px)", 10, 50, 50)
-        
+
+            animation_speed = st.slider("Animation Speed", 0.5, 3.0, 1.5, 0.1)
+
+            st.markdown("**Interactive Elements**")
+            enable_parallax = st.checkbox("Parallax Scrolling", True)
+            enable_morphing = st.checkbox("Morphing Shapes on Hover", False)
+            enable_3d_cards = st.checkbox("3D Card Effects", True)
+            enable_cursor_follow = st.checkbox("Cursor-Following Effects", False)
         col7, col8 = st.columns(2)
         with col7:
             show_about = st.checkbox("Show About Section", True)
             show_stats = st.checkbox("Show Stats Cards", True)
         with col8:
             greeting_text = st.text_input("Greeting Text", "👋 Hello, I'm")
+
+        
+        st.markdown("#### 🎨 Choose Portfolio Template")
+
+        template_cols = st.columns(2)
+        for idx, (template_name, template_info) in enumerate(PORTFOLIO_TEMPLATES.items()):
+            with template_cols[idx % 2]:
+                if st.button(f"Select {template_name}", key=f"template_{template_name}"):
+                    st.session_state.selected_portfolio_template = template_name
+                
+                st.markdown(f"""
+                <div class="template-card {'selected' if st.session_state.get('selected_portfolio_template') == template_name else ''}">
+                    <h4>{template_name}</h4>
+                    <p>{template_info['description']}</p>
+                </div>
+                """, unsafe_allow_html=True)
         
         st.markdown("#### ✍️ Content")
         tagline = st.text_input("Portfolio Tagline", f"{target_role} | Building innovative solutions")
         about_portfolio = st.text_area("About Section", f"Passionate {target_role} with expertise in {technical_skills.split(',')[0] if technical_skills else 'technology'}. I love building products that make a difference.", height=100)
         
+        
         if st.button("🚀 Build My Portfolio", use_container_width=True):
             with st.spinner("🎨 Designing your portfolio website..."):
+                # Get selected template
+                selected_template = st.session_state.get('selected_portfolio_template', 'Modern Minimal')
+                
                 # Build skills HTML
                 skills_categories = {
                     "Technical Skills": technical_skills.split(',')[:8],
@@ -2381,7 +4449,8 @@ def main():
                     'num_projects': len(projects),
                     'num_skills': len(technical_skills.split(',')),
                     'years_exp': experience_level.split()[0] if experience_level.split()[0].isdigit() else "1",
-                    'theme_mode': theme_mode
+                    'theme_mode': theme_mode,
+                    'template': selected_template
                 }
                 
                 html_content = generate_portfolio_html(config)
@@ -2399,42 +4468,46 @@ def main():
                         </div>
                     """, unsafe_allow_html=True)
                 
+            
+
+                
                 # Create ZIP file
                 zip_buffer = BytesIO()
                 with zipfile.ZipFile(zip_buffer, "w") as zf:
                     zf.writestr("index.html", html_content)
                     zf.writestr("README.md", f"""# {full_name}'s Portfolio
 
-## 🌟 Features
-- 🌓 Theme: {theme_mode}
-- 🎨 Responsive Design
-- ⚡ Fast Loading
-- 📱 Mobile Friendly
-- ✨ Smooth Animations
+        ## 🌟 Features
+        - 🌓 Theme: {theme_mode}
+        - 🎨 Template: {selected_template}
+        - 🎨 Responsive Design
+        - ⚡ Fast Loading
+        - 📱 Mobile Friendly
+        - ✨ Smooth Animations
 
-## 🚀 Deploy
+        ## 🚀 Deploy
 
-### Option 1: Netlify (Easiest)
-1. Go to [netlify.com](https://netlify.com)
-2. Drag and drop this folder
-3. Your site is live!
+        ### Option 1: Netlify (Easiest)
+        1. Go to [netlify.com](https://netlify.com)
+        2. Drag and drop this folder
+        3. Your site is live!
 
-### Option 2: Vercel
-1. Go to [vercel.com](https://vercel.com)
-2. Import from GitHub or upload files
-3. Deploy instantly
+        ### Option 2: Vercel
+        1. Go to [vercel.com](https://vercel.com)
+        2. Import from GitHub or upload files
+        3. Deploy instantly
 
-### Option 3: GitHub Pages
-1. Create a new repository
-2. Upload files
-3. Enable GitHub Pages in settings
-4. Your portfolio is live at username.github.io
+        ### Option 3: GitHub Pages
+        1. Create a new repository
+        2. Upload files
+        3. Enable GitHub Pages in settings
+        4. Your portfolio is live at username.github.io
 
-## 📝 Customization
-Edit `index.html` to customize colors, content, and layout.
+        ## 📝 Customization
+        Edit `index.html` to customize colors, content, and layout.
 
-Created with AI Career Builder Pro 🚀
-""")
+        Created with AI Career Builder Pro 🚀
+        """)
                 
                 zip_buffer.seek(0)
                 st.markdown(
@@ -2451,8 +4524,7 @@ Created with AI Career Builder Pro 🚀
                     </div>
                 """, unsafe_allow_html=True)
         
-        st.markdown('</div>', unsafe_allow_html=True)
-    
+       
     # TAB 4: Career Advisor
     with tab4:
         st.markdown('<div class="glass-card">', unsafe_allow_html=True)
@@ -2526,5 +4598,4 @@ Created with AI Career Builder Pro 🚀
 
 
 if __name__ == "__main__":
-
     main()
