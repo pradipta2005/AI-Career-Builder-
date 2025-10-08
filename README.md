@@ -81,8 +81,8 @@ Experience AI Career Builder Pro now:
 ### 🔧 **Steps**
 #### 1️⃣ Clone Repository
 ```bash
-git clone https://github.com/yourusername/ai-career-builder-pro.git
-cd ai-career-builder-pro
+git clone https://github.com/pradipta2005/ai-career-builder-.git
+cd ai-career-builder-
 ```
 #### 2️⃣ Create Virtual Environment
 ```bash
