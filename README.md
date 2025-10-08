@@ -6,7 +6,7 @@
 [![Streamlit](https://img.shields.io/badge/Framework-Streamlit-red.svg)](https://streamlit.io/)
 [![Google Gemini](https://img.shields.io/badge/AI-Google%20Gemini-purple.svg)](https://ai.google.dev/)
 [![Live Demo](https://img.shields.io/badge/Live%20Demo-Click%20Here-green.svg)](https://ai-career-builder.onrender.com/)
-[![Deploy on Render](https://render.com/images/badge-deploy-on-render-blue.svg)](https://render.com/)
+
 
 ---
 
@@ -155,9 +155,6 @@ ai-career-builder-pro/
 ├── .env                    # Environment variables
 ├── requirements.txt        # Dependencies
 ├── README.md               # Documentation (this file)
-├── assets/                 # Images, icons, and static files
-└── templates/              # Template structures for resumes and portfolios
-```
 
 ---
 
@@ -189,9 +186,6 @@ If you encounter any issues:
 - Multi-language resume support  
 
 ---
-
-## 🧠 **License**
-This project is licensed under the [MIT License](https://opensource.org/licenses/MIT).
 
 ---
 
