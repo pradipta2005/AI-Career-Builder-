@@ -21,6 +21,9 @@ st.set_page_config(
 
 
 
+# Now it's safe to use any st.* calls
+load_dotenv()
+
 # Initialize session state AFTER page config
 if 'sidebar_visible' not in st.session_state:
     st.session_state.sidebar_visible = True
@@ -32,7 +35,7 @@ if 'profile_completeness' not in st.session_state:
     st.session_state.profile_completeness = 0
 
 # Only now do your API key check
-GEMINI_API_KEY = st.secrets.get("GEMINI_API_KEY")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 if not GEMINI_API_KEY:
     st.error("⚠️ Please set `GEMINI_API_KEY` in your `.env` file.")
     st.stop()
@@ -40,7 +43,6 @@ else:
     genai.configure(api_key=GEMINI_API_KEY)
 
 MODEL_NAME = "gemini-2.0-flash-exp"
-
 # Apply CSS to hide/show the sidebar
 st.markdown(
     f"""
@@ -2524,4 +2526,5 @@ Created with AI Career Builder Pro 🚀
 
 
 if __name__ == "__main__":
+
     main()
