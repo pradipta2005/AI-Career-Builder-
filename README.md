@@ -156,7 +156,11 @@ ai-career-builder-pro/
 ├── requirements.txt        # Dependencies
 ├── README.md               # Documentation (this file)
 
+```
+
 ---
+
+
 
 ## 🙏 **Acknowledgments**
 - 💡 **Google Gemini** – for powerful content generation  
