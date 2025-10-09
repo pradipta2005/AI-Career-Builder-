@@ -4589,7 +4589,7 @@ def main():
     st.markdown("""
         <div style="text-align: center; color: rgba(255,255,255,0.5); padding: 2rem; border-top: 1px solid rgba(255,255,255,0.1);">
             <p style="font-size: 1.1rem; margin-bottom: 0.5rem;">Made with ❤️ for students worldwide</p>
-            <p style="font-size: 0.9rem;">Powered by Google Gemini AI • © 2024 AI Career Builder Pro</p>
+            <p style="font-size: 0.9rem;">Powered by Google Gemini AI • © 2025 AI Career Builder Pro</p>
             <p style="font-size: 0.85rem; margin-top: 0.5rem; color: rgba(255,255,255,0.3);">
                 Helping students land their dream jobs one resume at a time 🚀
             </p>
@@ -4599,3 +4599,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
